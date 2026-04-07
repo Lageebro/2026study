@@ -39,15 +39,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         }, 500);
     }, 2000);
 
-    // Give Firebase a tiny bit of time to initialize cache before full load
-    setTimeout(async () => {
-        await initDB();
+    // Initialize offline/cache UI immediately without blocking
+    setTimeout(() => {
         initCountdown();
         initPlan(); // Load study plan
-        initSubjects();
+        initSubjects(); // Attaches onSnapshot (loads cache instantly!)
         initPapers();
         initTimer();
         loadAnalysis(); // Preload analysis listeners
+
+        // Run DB check/seeding in the background without blocking the UI
+        initDB();
     }, 100);
 });
 
