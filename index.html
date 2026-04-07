@@ -33,51 +33,65 @@
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="bg-gradient-to-br from-purple-50 via-white to-purple-100 text-purple-900 font-sans antialiased pb-20 md:pb-0 md:flex md:h-screen md:overflow-hidden selection:bg-purple-200">
+<body
+    class="bg-gradient-to-br from-purple-50 via-white to-purple-100 text-purple-900 font-sans antialiased pb-20 md:pb-0 md:flex md:h-screen md:overflow-hidden selection:bg-purple-200">
 
     <!-- Splash Screen -->
     <div id="splashScreen"
         class="fixed inset-0 bg-gradient-to-br from-purple-700 via-purple-600 to-purple-900 flex flex-col items-center justify-center z-50 transition-opacity duration-700">
-        <h1 class="text-3xl md:text-5xl text-white font-extrabold animate-pulse drop-shadow-xl text-center tracking-wide leading-relaxed px-4">
+        <h1
+            class="text-3xl md:text-5xl text-white font-extrabold animate-pulse drop-shadow-xl text-center tracking-wide leading-relaxed px-4">
             This is your study Time <span class="text-purple-200">Manikeee</span> ✨
         </h1>
     </div>
 
     <!-- Main Content -->
-    <div id="appContent" class="hidden md:flex-1 w-full max-w-md md:max-w-none mx-auto p-4 md:p-10 transition-all pb-24 md:pb-10 md:overflow-y-auto">
+    <div id="appContent"
+        class="hidden md:flex-1 w-full max-w-md md:max-w-none mx-auto p-4 md:p-10 transition-all pb-24 md:pb-10 md:overflow-y-auto">
 
         <!-- Mobile Header (hidden on desktop) -->
         <header class="mb-6 flex flex-col items-center mt-4 text-center md:hidden">
             <h1 class="text-2xl font-extrabold text-purple-900">A/L 2026 Target</h1>
-            <p class="text-sm text-purple-600 font-medium">Keep Grinding!</p>
+            <p class="text-sm text-purple-600 font-medium">You can do it ! <br> Manikeee ✨</br>
+
+
+            </p>
         </header>
 
         <!-- Home Section -->
         <section id="sec-home" class="view-section active max-w-6xl mx-auto md:w-full">
             <div class="md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8 md:items-stretch">
                 <!-- Time Remaining Card -->
-                <div class="bg-white rounded-3xl shadow-xl shadow-purple-200/50 p-6 text-center border border-purple-100 mb-6 md:mb-0 md:col-span-2 flex flex-col justify-center min-h-[16rem]">
+                <div
+                    class="bg-white rounded-3xl shadow-xl shadow-purple-200/50 p-6 text-center border border-purple-100 mb-6 md:mb-0 md:col-span-2 flex flex-col justify-center min-h-[16rem]">
                     <h2 class="text-xl md:text-2xl font-bold mb-4 md:mb-8 text-purple-900">Time Remaining</h2>
                     <div class="grid grid-cols-4 gap-2 md:gap-6 text-center" id="countdown"></div>
                 </div>
 
-            <!-- Study Plan Note -->
-            <div class="bg-white rounded-3xl shadow-xl shadow-purple-200/50 p-6 border border-purple-100 relative group">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold text-purple-900">My Study Plan</h2>
-                    <button id="editPlanBtn" class="text-purple-600 hover:text-purple-800 transition">
-                        <i class="fas fa-edit"></i>
-                    </button>
+                <!-- Study Plan Note -->
+                <div
+                    class="bg-white rounded-3xl shadow-xl shadow-purple-200/50 p-6 border border-purple-100 relative group">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-purple-900">My Study Plan</h2>
+                        <button id="editPlanBtn" class="text-purple-600 hover:text-purple-800 transition">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </div>
+                    <!-- Read Only View -->
+                    <div id="planDisplay"
+                        class="text-gray-700 whitespace-pre-wrap text-[13px] md:text-sm min-h-[4rem] font-medium p-3 bg-purple-50/50 rounded-2xl border border-purple-50">
+                    </div>
+
+                    <!-- Edit View -->
+                    <div id="planEditContainer" class="hidden flex-col gap-3 h-full">
+                        <textarea id="planInput"
+                            class="w-full h-full flex-1 bg-purple-50/80 rounded-2xl p-4 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-purple-400 min-h-[8rem] md:min-h-[14rem] resize-none border border-purple-100"
+                            placeholder="Manikee oyata karanna thiyena ewa tika add karanna... "></textarea>
+                        <button id="savePlanBtn"
+                            class="bg-purple-600 text-white rounded-2xl py-3 px-4 font-bold hover:bg-purple-700 transition w-full active:scale-95">Save
+                            Plan</button>
+                    </div>
                 </div>
-                <!-- Read Only View -->
-                <div id="planDisplay" class="text-gray-700 whitespace-pre-wrap text-[13px] md:text-sm min-h-[4rem] font-medium p-3 bg-purple-50/50 rounded-2xl border border-purple-50"></div>
-                
-                <!-- Edit View -->
-                <div id="planEditContainer" class="hidden flex-col gap-3 h-full">
-                    <textarea id="planInput" class="w-full h-full flex-1 bg-purple-50/80 rounded-2xl p-4 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-purple-400 min-h-[8rem] md:min-h-[14rem] resize-none border border-purple-100" placeholder="Type what you want to study next..."></textarea>
-                    <button id="savePlanBtn" class="bg-purple-600 text-white rounded-2xl py-3 px-4 font-bold hover:bg-purple-700 transition w-full active:scale-95">Save Plan</button>
-                </div>
-            </div>
             </div>
         </section>
 
@@ -88,13 +102,15 @@
                 <span id="lastUpdated"
                     class="text-xs md:text-sm text-purple-600 font-medium bg-purple-100 px-3 py-1.5 rounded-full"></span>
             </div>
-            <div id="subjectsContainer" class="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:space-y-0"></div>
+            <div id="subjectsContainer" class="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:space-y-0">
+            </div>
         </section>
 
         <!-- Papers Section -->
         <section id="sec-papers" class="view-section hidden max-w-6xl mx-auto md:w-full">
             <h2 class="text-xl md:text-3xl font-bold mb-4 md:mb-8 md:mt-2">Past Papers</h2>
-            <div id="papersContainer" class="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:space-y-0"></div>
+            <div id="papersContainer" class="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:space-y-0">
+            </div>
         </section>
 
         <!-- Timer Section -->
@@ -113,7 +129,10 @@
                 </div>
             </div>
             <div class="rounded-3xl overflow-hidden shadow-xl shadow-purple-200/50 border border-purple-100">
-                <iframe width="100%" height="250" src="https://www.youtube-nocookie.com/embed/jnaAgLZIqT0?rel=0" title="Study Timer Music" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                <iframe width="100%" height="250" src="https://www.youtube-nocookie.com/embed/jnaAgLZIqT0?rel=0"
+                    title="Study Timer Music" frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>
             </div>
         </section>
 
@@ -123,11 +142,13 @@
             <div class="md:grid md:grid-cols-12 md:gap-6 md:items-start">
                 <div class="md:col-span-5 flex flex-col gap-4 md:gap-6 mb-6 md:mb-0">
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-white p-4 md:p-8 rounded-3xl shadow-lg border border-purple-100 text-center flex flex-col justify-center">
+                        <div
+                            class="bg-white p-4 md:p-8 rounded-3xl shadow-lg border border-purple-100 text-center flex flex-col justify-center">
                             <p class="text-xs md:text-sm text-purple-600 font-bold uppercase mb-1">Total Hours</p>
                             <p id="statTotalHours" class="text-2xl md:text-4xl font-extrabold text-purple-900">0.0</p>
                         </div>
-                        <div class="bg-white p-4 md:p-8 rounded-3xl shadow-lg border border-purple-100 text-center flex flex-col justify-center">
+                        <div
+                            class="bg-white p-4 md:p-8 rounded-3xl shadow-lg border border-purple-100 text-center flex flex-col justify-center">
                             <p class="text-xs md:text-sm text-purple-600 font-bold uppercase mb-1">Lesson Progress</p>
                             <p id="statLessons" class="text-2xl md:text-4xl font-extrabold text-purple-900">0 / 0</p>
                         </div>
@@ -137,8 +158,9 @@
                         <ul id="recentTopicsList" class="space-y-2 md:space-y-3 text-sm md:text-base"></ul>
                     </div>
                 </div>
-                
-                <div class="bg-white p-4 md:p-8 rounded-3xl shadow-lg border border-purple-100 md:col-span-7 h-full flex flex-col justify-center">
+
+                <div
+                    class="bg-white p-4 md:p-8 rounded-3xl shadow-lg border border-purple-100 md:col-span-7 h-full flex flex-col justify-center">
                     <h3 class="text-sm md:text-lg font-bold text-purple-900 mb-4 ml-2">Study Trend</h3>
                     <canvas id="studyChart"></canvas>
                 </div>
@@ -151,26 +173,42 @@
     <nav
         class="fixed bottom-0 w-full bg-white/95 backdrop-blur-xl border-t border-purple-100 h-20 z-40 px-2 pb-safe shadow-[0_-10px_40px_rgba(124,58,237,0.05)]
          md:relative md:order-first md:w-72 md:h-screen md:flex-col md:border-t-0 md:border-r md:shadow-[10px_0_40px_rgba(124,58,237,0.05)] md:px-0">
-        <div class="max-w-md mx-auto md:max-w-none h-full flex md:flex-col justify-between items-center md:items-stretch text-xs md:text-sm font-semibold text-purple-400 md:p-6 md:gap-3 md:mt-0">
-            
+        <div
+            class="max-w-md mx-auto md:max-w-none h-full flex md:flex-col justify-between items-center md:items-stretch text-xs md:text-sm font-semibold text-purple-400 md:p-6 md:gap-3 md:mt-0">
+
             <div class="hidden md:flex flex-col items-center mb-8 border-b border-purple-100 pb-8 pt-4">
                 <h1 class="text-xl font-extrabold text-purple-900">A/L 2026 Focus</h1>
             </div>
 
-            <button onclick="nav('home')" class="nav-btn w-1/5 md:w-full flex md:flex-row flex-col items-center md:justify-start gap-1 md:gap-4 text-purple-600 active md:hover:bg-purple-50 md:p-4 md:rounded-2xl transition" data-target="home">
-                <i class="fas fa-home text-xl mb-1 md:mb-0 md:w-6 md:text-center text-purple-600"></i> <span class="md:text-base md:font-bold md:text-purple-600">Home</span>
+            <button onclick="nav('home')"
+                class="nav-btn w-1/5 md:w-full flex md:flex-row flex-col items-center md:justify-start gap-1 md:gap-4 text-purple-600 active md:hover:bg-purple-50 md:p-4 md:rounded-2xl transition"
+                data-target="home">
+                <i class="fas fa-home text-xl mb-1 md:mb-0 md:w-6 md:text-center text-purple-600"></i> <span
+                    class="md:text-base md:font-bold md:text-purple-600">Home</span>
             </button>
-            <button onclick="nav('subject')" class="nav-btn w-1/5 md:w-full flex md:flex-row flex-col items-center md:justify-start gap-1 md:gap-4 md:hover:bg-purple-50 md:p-4 md:rounded-2xl transition" data-target="subject">
-                <i class="fas fa-book text-xl mb-1 md:mb-0 md:w-6 md:text-center"></i> <span class="md:text-base md:font-bold">Subjects</span>
+            <button onclick="nav('subject')"
+                class="nav-btn w-1/5 md:w-full flex md:flex-row flex-col items-center md:justify-start gap-1 md:gap-4 md:hover:bg-purple-50 md:p-4 md:rounded-2xl transition"
+                data-target="subject">
+                <i class="fas fa-book text-xl mb-1 md:mb-0 md:w-6 md:text-center"></i> <span
+                    class="md:text-base md:font-bold">Subjects</span>
             </button>
-            <button onclick="nav('papers')" class="nav-btn w-1/5 md:w-full flex md:flex-row flex-col items-center md:justify-start gap-1 md:gap-4 md:hover:bg-purple-50 md:p-4 md:rounded-2xl transition" data-target="papers">
-                <i class="fas fa-file-alt text-xl mb-1 md:mb-0 md:w-6 md:text-center"></i> <span class="md:text-base md:font-bold">Papers</span>
+            <button onclick="nav('papers')"
+                class="nav-btn w-1/5 md:w-full flex md:flex-row flex-col items-center md:justify-start gap-1 md:gap-4 md:hover:bg-purple-50 md:p-4 md:rounded-2xl transition"
+                data-target="papers">
+                <i class="fas fa-file-alt text-xl mb-1 md:mb-0 md:w-6 md:text-center"></i> <span
+                    class="md:text-base md:font-bold">Papers</span>
             </button>
-            <button onclick="nav('timer')" class="nav-btn w-1/5 md:w-full flex md:flex-row flex-col items-center md:justify-start gap-1 md:gap-4 md:hover:bg-purple-50 md:p-4 md:rounded-2xl transition" data-target="timer">
-                <i class="fas fa-stopwatch text-xl mb-1 md:mb-0 md:w-6 md:text-center"></i> <span class="md:text-base md:font-bold">Timer</span>
+            <button onclick="nav('timer')"
+                class="nav-btn w-1/5 md:w-full flex md:flex-row flex-col items-center md:justify-start gap-1 md:gap-4 md:hover:bg-purple-50 md:p-4 md:rounded-2xl transition"
+                data-target="timer">
+                <i class="fas fa-stopwatch text-xl mb-1 md:mb-0 md:w-6 md:text-center"></i> <span
+                    class="md:text-base md:font-bold">Timer</span>
             </button>
-            <button onclick="nav('analyze')" class="nav-btn w-1/5 md:w-full flex md:flex-row flex-col items-center md:justify-start gap-1 md:gap-4 md:hover:bg-purple-50 md:p-4 md:rounded-2xl transition" data-target="analyze">
-                <i class="fas fa-chart-line text-xl mb-1 md:mb-0 md:w-6 md:text-center"></i> <span class="md:text-base md:font-bold">Analyze</span>
+            <button onclick="nav('analyze')"
+                class="nav-btn w-1/5 md:w-full flex md:flex-row flex-col items-center md:justify-start gap-1 md:gap-4 md:hover:bg-purple-50 md:p-4 md:rounded-2xl transition"
+                data-target="analyze">
+                <i class="fas fa-chart-line text-xl mb-1 md:mb-0 md:w-6 md:text-center"></i> <span
+                    class="md:text-base md:font-bold">Analyze</span>
             </button>
         </div>
     </nav>

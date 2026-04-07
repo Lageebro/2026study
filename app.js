@@ -116,7 +116,7 @@ function initPlan() {
     const savePlanBtn = document.getElementById('savePlanBtn');
 
     // Load existing plan
-    const savedPlan = localStorage.getItem('studyPlanText') || "No plan yet. Click the edit icon to add your study plan!";
+    const savedPlan = localStorage.getItem('studyPlanText') || "Manikage Plan eka, Click the edit icon to add your study plan Sudu!";
     planDisplay.textContent = savedPlan;
 
     // Toggle edit mode
@@ -142,7 +142,7 @@ function initPlan() {
     savePlanBtn.addEventListener('click', () => {
         const newPlan = planInput.value.trim();
         localStorage.setItem('studyPlanText', newPlan);
-        planDisplay.textContent = newPlan || "No plan yet. Click the edit icon to add your study plan!";
+        planDisplay.textContent = newPlan || "Manikage Plan eka, Click the edit icon to add your study plan Sudu!";
         
         // Return to display mode
         planEditContainer.classList.add('hidden');
