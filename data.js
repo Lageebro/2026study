@@ -72,6 +72,11 @@ const fullNames = {
 
 const paperLinks = {
     ICT: {
+        2015: "https://drive.google.com/file/d/1kt047bEqHr8yhhchEGL912bMcZe5ZtAQ/view?usp=sharing",
+        2016: "https://drive.google.com/file/d/1fNJeoH3vGx_08wSCbK1DoEtZS_jf9v0I/view?usp=sharing",
+        2017: "https://drive.google.com/file/d/1V95j7rgWryyCTvwxFKXdiQpEWsT8os42/view?usp=sharing",
+        2018: "https://drive.google.com/file/d/1US0-Sdai1LgDUYqdvvMCCvYMozIUqqEZ/view?usp=sharing",
+        2019: "https://drive.google.com/file/d/1Hggbi9O7FaVJ2GnLUHqdncmCnFPZ02PQ/view?usp=sharing",
         2020: "https://drive.google.com/file/d/1bCfZDiBiZUOCi8uXimB839DorZuLUaYq/view?usp=sharing",
         2021: "https://drive.google.com/file/d/1aSvtR9cG49YM55Au7yXBLlHo4ZeiXvIu/view?usp=sharing",
         2022: "https://drive.google.com/file/d/1U4y8uZlvpV1j4CrE2TyY7NPnmG0e0HAx/view?usp=sharing",
@@ -80,6 +85,11 @@ const paperLinks = {
         2025: "https://drive.google.com/drive/my-drive"
     },
     SFT: {
+        2015: "https://drive.google.com/file/d/1dioCr6lSmxrsvq5XPggMFql9c3OlTvju/view?usp=sharing",
+        2016: "https://drive.google.com/file/d/1IoIjaz2BZWWKf395NxE1Tf9KHCW8RQAW/view?usp=sharing",
+        2017: "https://drive.google.com/file/d/1v4c-5EM2g8T2ivORARHO876W17HhSYzp/view?usp=sharing",
+        2018: "https://drive.google.com/file/d/1Dp8mn7OOucZDHJrDG_pvSrNpasfwLdVE/view?usp=sharing",
+        2019: "https://drive.google.com/file/d/1mP6z5ZpbaAYvCGDz1HK6mJl0ilkxOt-M/view?usp=sharing",
         2020: "https://drive.google.com/file/d/1-529-baMYuBdxRwl_MI6WLnIJBEG7Hh7/view?usp=sharing",
         2021: "https://drive.google.com/file/d/1QOQVVdfPRh5WAbjIqOWKiW5y3mRpBNRT/view?usp=sharing",
         2022: "https://drive.google.com/file/d/1RaCStGF1rvtIH9ph16fl6FCVi0pqJBEz/view?usp=sharing",
@@ -88,6 +98,11 @@ const paperLinks = {
         2025: "https://drive.google.com/file/d/1jiWegtSxulo2CVB_DMe_ODELwRzOOEFi/view?usp=sharing"
     },
     BST: {
+        2015: "https://drive.google.com/file/d/1M8E1ViPhUxGJ3n7SFTO1GC9ArdgBxUs0/view?usp=sharing",
+        2016: "https://drive.google.com/file/d/11gLbCHoT9N2U-2GeTz8Az99vFlSCGpf9/view?usp=sharing",
+        2017: "https://drive.google.com/file/d/1BjEbKSUZ1TMNO3mK4aNrHkDF4FF5tWyc/view?usp=sharing",
+        2018: "https://drive.google.com/file/d/1EQPA2Bshm0qjL3coXJ6x7nu-AOiWIdsl/view?usp=sharing",
+        2019: "https://drive.google.com/file/d/1C2nf5lEo1ltlzDScwW25_cwD1JfCkre9/view?usp=sharing",
         2020: "https://drive.google.com/file/d/1Of5Y0ex-m_yZlYfPaWhnVCPScrlTzke1/view?usp=sharing",
         2021: "https://drive.google.com/file/d/1Suj9KwIAcIbR5nsVkfAqHhX3MHuWmLdo/view?usp=sharing",
         2022: "https://drive.google.com/file/d/1w0b3jaDPOrTOSJo5NOZPLmu18QpYTJ4w/view?usp=sharing",

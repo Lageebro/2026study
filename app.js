@@ -36,6 +36,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             document.getElementById('splashScreen').style.display = 'none';
             document.getElementById('appContent').classList.remove('hidden');
             document.getElementById('lastUpdated').textContent = `Last Updated: ${new Date().toLocaleDateString()}`;
+            
+            // Show Motivation Modal
+            const modal = document.getElementById('motivationModal');
+            if(modal) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0', 'scale-95');
+                    modal.classList.add('opacity-100', 'scale-100');
+                }, 50);
+            }
         }, 500);
     }, 2000);
 
@@ -51,6 +61,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Run DB check/seeding in the background without blocking the UI
         initDB();
     }, 100);
+
+    // Close Motivation Modal Logic
+    const closeMotivationBtn = document.getElementById('closeMotivationBtn');
+    const motivationOverlay = document.getElementById('motivationOverlay');
+    const modal = document.getElementById('motivationModal');
+
+    const closeModal = () => {
+        if(modal) {
+            modal.classList.remove('opacity-100', 'scale-100');
+            modal.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 500);
+        }
+    };
+
+    if(closeMotivationBtn) closeMotivationBtn.addEventListener('click', closeModal);
+    if(motivationOverlay) motivationOverlay.addEventListener('click', closeModal);
 });
 
 window.nav = function (sectionId) {
@@ -117,9 +145,29 @@ function initPlan() {
     const editPlanBtn = document.getElementById('editPlanBtn');
     const savePlanBtn = document.getElementById('savePlanBtn');
 
-    // Load existing plan
-    const savedPlan = localStorage.getItem('studyPlanText') || "Manikage Plan eka, Click the edit icon to add your study plan Sudu!";
-    planDisplay.textContent = savedPlan;
+    const defaultPlanText = "Manikage Plan eka, Click the edit icon to add your study plan Sudu!";
+
+    // Listen to Firebase for real-time plan updates across all devices
+    db.collection("sharedData").doc("studyPlan").onSnapshot((doc) => {
+        if (doc.exists) {
+            const planText = doc.data().text;
+            planDisplay.textContent = planText || defaultPlanText;
+        } else {
+            // Initial load fallback to local storage if exists, then migrate
+            const localPlan = localStorage.getItem('studyPlanText');
+            if (localPlan) {
+                db.collection("sharedData").doc("studyPlan").set({ text: localPlan }).catch(e => console.log(e));
+                planDisplay.textContent = localPlan;
+                localStorage.removeItem('studyPlanText'); // clear local after migrating
+            } else {
+                planDisplay.textContent = defaultPlanText;
+            }
+        }
+    }, (error) => {
+        console.error("Error fetching study plan", error);
+        // Offline fallback
+        planDisplay.textContent = document.getElementById('planDisplay').textContent || defaultPlanText;
+    });
 
     // Toggle edit mode
     editPlanBtn.addEventListener('click', () => {
@@ -135,7 +183,8 @@ function initPlan() {
             planDisplay.classList.add('hidden');
             planEditContainer.classList.remove('hidden');
             planEditContainer.classList.add('flex');
-            planInput.value = localStorage.getItem('studyPlanText') || "";
+            const currentPlan = planDisplay.textContent === defaultPlanText ? "" : planDisplay.textContent;
+            planInput.value = currentPlan;
             editPlanBtn.innerHTML = '<i class="fas fa-times"></i>'; // Close icon
         }
     });
@@ -143,8 +192,15 @@ function initPlan() {
     // Save plan
     savePlanBtn.addEventListener('click', () => {
         const newPlan = planInput.value.trim();
-        localStorage.setItem('studyPlanText', newPlan);
-        planDisplay.textContent = newPlan || "Manikage Plan eka, Click the edit icon to add your study plan Sudu!";
+        
+        // Save to Firebase (this will trigger the onSnapshot above to update UI on all devices)
+        db.collection("sharedData").doc("studyPlan").set({
+            text: newPlan,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }).catch(err => {
+            console.error("Error saving plan:", err);
+            planDisplay.textContent = newPlan || defaultPlanText;
+        });
         
         // Return to display mode
         planEditContainer.classList.add('hidden');
@@ -281,7 +337,7 @@ window.toggleLesson = function (id, isChecked) {
 
 function initPapers() {
     const container = document.getElementById('papersContainer');
-    const years = [2020, 2021, 2022, 2023, 2024, 2025];
+    const years = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025];
 
     for (let subj in fullNames) {
         const card = document.createElement('div');
