@@ -373,13 +373,20 @@ function initPapers() {
 
 // Timer Logic
 const btnStart = document.getElementById('btnStartTimer');
+const btnPause = document.getElementById('btnPauseTimer');
 const btnEnd = document.getElementById('btnEndTimer');
 const display = document.getElementById('timerDisplay');
 
 function updateTimerDisplay() {
-    const startTime = localStorage.getItem('timerStart');
-    if (!startTime) return;
-    const diff = new Date().getTime() - parseInt(startTime);
+    let diff = 0;
+    if (localStorage.getItem('timerStart')) {
+        diff = new Date().getTime() - parseInt(localStorage.getItem('timerStart'));
+    } else if (localStorage.getItem('timerElapsed')) {
+        diff = parseInt(localStorage.getItem('timerElapsed'));
+    } else {
+        return;
+    }
+    
     if (diff < 0) return;
     const h = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
     const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
@@ -391,22 +398,70 @@ function initTimer() {
     if (localStorage.getItem('timerStart')) {
         timerInterval = setInterval(updateTimerDisplay, 1000);
         btnStart.disabled = true; btnStart.classList.add('opacity-50');
+        btnStart.textContent = "Start";
+        if (btnPause) { btnPause.disabled = false; btnPause.classList.remove('opacity-50'); }
+        btnEnd.disabled = false;
+        updateTimerDisplay();
+    } else if (localStorage.getItem('timerElapsed')) {
+        btnStart.disabled = false; btnStart.classList.remove('opacity-50');
+        btnStart.textContent = "Resume";
+        if (btnPause) { btnPause.disabled = true; btnPause.classList.add('opacity-50'); }
         btnEnd.disabled = false;
         updateTimerDisplay();
     }
+
     btnStart.addEventListener('click', () => {
-        localStorage.setItem('timerStart', new Date().getTime().toString());
+        let startTime = new Date().getTime();
+        if (localStorage.getItem('timerElapsed')) {
+            startTime -= parseInt(localStorage.getItem('timerElapsed'));
+            localStorage.removeItem('timerElapsed');
+        }
+        localStorage.setItem('timerStart', startTime.toString());
         timerInterval = setInterval(updateTimerDisplay, 1000);
+        
         btnStart.disabled = true; btnStart.classList.add('opacity-50');
+        btnStart.textContent = "Start";
+        if (btnPause) { btnPause.disabled = false; btnPause.classList.remove('opacity-50'); }
         btnEnd.disabled = false;
+        updateTimerDisplay();
     });
+
+    if (btnPause) {
+        btnPause.addEventListener('click', () => {
+            clearInterval(timerInterval);
+            const startT = localStorage.getItem('timerStart');
+            if (startT) {
+                const elapsed = new Date().getTime() - parseInt(startT);
+                localStorage.setItem('timerElapsed', elapsed.toString());
+                localStorage.removeItem('timerStart');
+            }
+            btnStart.disabled = false; btnStart.classList.remove('opacity-50');
+            btnStart.textContent = "Resume";
+            btnPause.disabled = true; btnPause.classList.add('opacity-50');
+            updateTimerDisplay();
+        });
+    }
+
     btnEnd.addEventListener('click', async () => {
         clearInterval(timerInterval);
-        const st = parseInt(localStorage.getItem('timerStart'));
-        const duration = Math.max(1, Math.round((new Date().getTime() - st) / 60000));
+        
+        let elapsed = 0;
+        if (localStorage.getItem('timerStart')) {
+            elapsed = new Date().getTime() - parseInt(localStorage.getItem('timerStart'));
+        } else if (localStorage.getItem('timerElapsed')) {
+            elapsed = parseInt(localStorage.getItem('timerElapsed'));
+        }
+
+        const duration = Math.max(1, Math.round(elapsed / 60000));
+        
         localStorage.removeItem('timerStart');
+        localStorage.removeItem('timerElapsed');
+        
         btnStart.disabled = false; btnStart.classList.remove('opacity-50');
-        btnEnd.disabled = true; display.textContent = "00:00:00";
+        btnStart.textContent = "Start";
+        if (btnPause) { btnPause.disabled = true; btnPause.classList.add('opacity-50'); }
+        btnEnd.disabled = true; 
+        display.textContent = "00:00:00";
 
         const topic = prompt("Monawada me welawe padam kare? (What did you study?)");
         if (topic) await saveStudySession(duration, topic);

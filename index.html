@@ -144,11 +144,14 @@
                 <h2 class="text-xl font-bold mb-4">Study Session</h2>
                 <div id="timerDisplay" class="text-5xl font-mono font-bold text-purple-600 mb-6 tracking-wider">00:00:00
                 </div>
-                <div class="flex gap-4 justify-center">
+                <div class="flex gap-3 md:gap-4 justify-center">
                     <button id="btnStartTimer"
-                        class="bg-purple-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-purple-700 transition active:scale-95">Start</button>
+                        class="bg-purple-600 text-white px-5 md:px-8 py-3 rounded-2xl font-bold hover:bg-purple-700 transition active:scale-95">Start</button>
+                    <button id="btnPauseTimer"
+                        class="bg-amber-500 text-white px-5 md:px-8 py-3 rounded-2xl font-bold hover:bg-amber-600 transition disabled:opacity-50 active:scale-95"
+                        disabled>Pause</button>
                     <button id="btnEndTimer"
-                        class="bg-rose-500 text-white px-8 py-3 rounded-2xl font-bold hover:bg-rose-600 transition disabled:opacity-50 active:scale-95"
+                        class="bg-rose-500 text-white px-5 md:px-8 py-3 rounded-2xl font-bold hover:bg-rose-600 transition disabled:opacity-50 active:scale-95"
                         disabled>End</button>
                 </div>
             </div>
