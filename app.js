@@ -165,6 +165,9 @@ function initPlan() {
         }
     }, (error) => {
         console.error("Error fetching study plan", error);
+        if(error.code === 'permission-denied') {
+            alert("Firebase 'studyPlan' sync failed due to Security Rules. Please change Firestore Rules to allow read/write.");
+        }
         // Offline fallback
         planDisplay.textContent = document.getElementById('planDisplay').textContent || defaultPlanText;
     });
@@ -260,6 +263,9 @@ function initSubjects() {
         }
     }, err => {
         console.error("Offline or Error listening to lessons: ", err);
+        if(err.code === 'permission-denied') {
+            alert("Firebase Security Rules error! Your database is locked. Other devices cannot see updates. Please change rules to 'allow read, write: if true;' in Firebase Console.");
+        }
     });
 }
 
