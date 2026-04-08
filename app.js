@@ -1,12 +1,12 @@
 /* === FIREBASE CONFIGURATION === */
 // OYAGE FIREBASE CONFIGURATION EKA
 const firebaseConfig = {
-    apiKey: "AIzaSyBo7RCTF0Sz89dDmu9u6pfZjb62j3G__TM",
-    authDomain: "study-64199.firebaseapp.com",
-    projectId: "study-64199",
-    storageBucket: "study-64199.firebasestorage.app",
-    messagingSenderId: "529180176160",
-    appId: "1:529180176160:web:f7867510cc160254fbb145"
+  apiKey: "AIzaSyCEzV3toneqp6JqVyeE7IFdevNPF669_oU",
+  authDomain: "studyapp-new.firebaseapp.com",
+  projectId: "studyapp-new",
+  storageBucket: "studyapp-new.firebasestorage.app",
+  messagingSenderId: "94869037818",
+  appId: "1:94869037818:web:fe6446e170c33ba6739f43"
 };
 
 // Initialize Firebase
