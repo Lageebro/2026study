@@ -302,6 +302,32 @@ function initPlan() {
         planDisplay.classList.remove('hidden');
         editPlanBtn.innerHTML = '<i class="fas fa-edit"></i>';
     });
+
+    // 6:30 AM & 6:30 PM Study Plan Reminder
+    setInterval(() => {
+        const now = new Date();
+        const hours = now.getHours();
+        const minutes = now.getMinutes();
+
+        // 6:30 AM (6) or 6:30 PM (18)
+        if ((hours === 6 || hours === 18) && minutes === 30) {
+            const todayStr = now.toISOString().split('T')[0];
+            const shift = hours === 6 ? 'Morning' : 'Evening';
+            const storageKey = `notifiedPlan_${todayStr}_${shift}`;
+            
+            if (!localStorage.getItem(storageKey)) {
+                const currentPlan = planDisplay.textContent;
+                const isDefault = currentPlan === defaultPlanText || !currentPlan;
+                
+                const title = hours === 6 ? "Good Morning Sudu!🌅 Ude plan eka mehemai!" : "Good Evening Sudu!🌇 Hawasa plan eka mehemai!";
+                const body = isDefault ? "Thama plan eka add karala na. App eken plan eka update karanna manike!" : currentPlan;
+
+                window.sendPhoneNotification(title, body);
+
+                localStorage.setItem(storageKey, 'true');
+            }
+        }
+    }, 45000); // Check every 45 seconds to avoid heavy loop
 }
 
 function initCountdown() {
