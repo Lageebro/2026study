@@ -41,13 +41,14 @@ if ('serviceWorker' in navigator) {
 
 window.sendPhoneNotification = function(title, body) {
     if ("Notification" in window && Notification.permission === "granted") {
-        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        if ('serviceWorker' in navigator) {
             navigator.serviceWorker.ready.then(function(registration) {
                 registration.showNotification(title, {
                     body: body,
                     icon: "Logodark.png",
                     vibrate: [200, 100, 200, 100, 200, 100, 200],
-                    badge: "Logodark.png"
+                    badge: "Logodark.png",
+                    requireInteraction: true
                 });
             }).catch(err => {
                 new Notification(title, { body: body, icon: "Logodark.png" });
@@ -146,9 +147,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (classNotifOverlay) classNotifOverlay.addEventListener('click', closeClassModal);
 });
 
-// Request notification permission early
-if ("Notification" in window && Notification.permission === 'default') {
-    Notification.requestPermission();
+window.requestNotificationPermission = function() {
+    if (!('Notification' in window)) {
+        alert("Sudu, oyage device eke web notifications support karanne nha.");
+        return;
+    }
+    
+    // Check if it's iOS and not standalone
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    
+    if (isIos && !isStandalone) {
+        alert("Sudu, iPhone eke lock screen notifications pennanna nam, yatama thiyena share (⬆️) button eka click karala 'Add to Home Screen' (➕) select karanna. Eeta passe Home screen eken app eka open karala me bell eka obanna Manikee!");
+        return;
+    }
+
+    Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+            window.sendPhoneNotification("Notificashan On Kara! 🎉", "Dan oyata Lock screen eketh classes gena mathak wewi manike!");
+            alert("Notificashan on kala, Sudu! Lock screen eketh pennai! 🚀");
+        } else if (permission === 'denied') {
+            alert("Notificashan disable karala thiyenne Sudu. Settings walin ayeth enable karanna.");
+        }
+    });
 }
 
 window.nav = function (sectionId) {
