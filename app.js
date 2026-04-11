@@ -1,12 +1,12 @@
 /* === FIREBASE CONFIGURATION === */
 // OYAGE FIREBASE CONFIGURATION EKA
 const firebaseConfig = {
-  apiKey: "AIzaSyCEzV3toneqp6JqVyeE7IFdevNPF669_oU",
-  authDomain: "studyapp-new.firebaseapp.com",
-  projectId: "studyapp-new",
-  storageBucket: "studyapp-new.firebasestorage.app",
-  messagingSenderId: "94869037818",
-  appId: "1:94869037818:web:fe6446e170c33ba6739f43"
+    apiKey: "AIzaSyCEzV3toneqp6JqVyeE7IFdevNPF669_oU",
+    authDomain: "studyapp-new.firebaseapp.com",
+    projectId: "studyapp-new",
+    storageBucket: "studyapp-new.firebasestorage.app",
+    messagingSenderId: "94869037818",
+    appId: "1:94869037818:web:fe6446e170c33ba6739f43"
 };
 
 // Initialize Firebase
@@ -27,6 +27,52 @@ db.enablePersistence().catch(function (err) {
 let timerInterval;
 const TARGET_DATE = new Date("2026-08-10T00:00:00").getTime();
 let studyChartInstance = null;
+let upcomingClassSchedules = [];
+let classNotifInterval = null;
+
+// Register Service Worker for Mobile Notifications
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log("Service Worker registered for notifications"))
+            .catch(err => console.log("SW Reg Error:", err));
+    });
+}
+
+window.sendPhoneNotification = function(title, body) {
+    if ("Notification" in window && Notification.permission === "granted") {
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.ready.then(function(registration) {
+                registration.showNotification(title, {
+                    body: body,
+                    icon: "Logodark.png",
+                    vibrate: [200, 100, 200, 100, 200, 100, 200],
+                    badge: "Logodark.png"
+                });
+            }).catch(err => {
+                new Notification(title, { body: body, icon: "Logodark.png" });
+            });
+        } else {
+            new Notification(title, { body: body, icon: "Logodark.png" });
+        }
+    }
+}
+
+window.showClassModal = function (title, contentHtml) {
+    const notifModal = document.getElementById('classNotificationModal');
+    const notifContent = document.getElementById('classNotificationContent');
+    const notifTitle = document.getElementById('classNotificationTitle');
+
+    if (notifModal && notifContent) {
+        if (title && notifTitle) notifTitle.textContent = title;
+        notifContent.innerHTML = contentHtml;
+        notifModal.classList.remove('hidden');
+        setTimeout(() => {
+            notifModal.classList.remove('opacity-0', 'scale-95');
+            notifModal.classList.add('opacity-100', 'scale-100');
+        }, 100);
+    }
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
     // Splash screen logic
@@ -36,10 +82,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             document.getElementById('splashScreen').style.display = 'none';
             document.getElementById('appContent').classList.remove('hidden');
             document.getElementById('lastUpdated').textContent = `Last Updated: ${new Date().toLocaleDateString()}`;
-            
+
             // Show Motivation Modal
             const modal = document.getElementById('motivationModal');
-            if(modal) {
+            if (modal) {
                 modal.classList.remove('hidden');
                 setTimeout(() => {
                     modal.classList.remove('opacity-0', 'scale-95');
@@ -56,6 +102,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         initSubjects(); // Attaches onSnapshot (loads cache instantly!)
         initPapers();
         initTimer();
+        initClasses(); // Class schedule manager
         loadAnalysis(); // Preload analysis listeners
 
         // Run DB check/seeding in the background without blocking the UI
@@ -68,7 +115,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const modal = document.getElementById('motivationModal');
 
     const closeModal = () => {
-        if(modal) {
+        if (modal) {
             modal.classList.remove('opacity-100', 'scale-100');
             modal.classList.add('opacity-0', 'scale-95');
             setTimeout(() => {
@@ -77,9 +124,32 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     };
 
-    if(closeMotivationBtn) closeMotivationBtn.addEventListener('click', closeModal);
-    if(motivationOverlay) motivationOverlay.addEventListener('click', closeModal);
+    if (closeMotivationBtn) closeMotivationBtn.addEventListener('click', closeModal);
+    if (motivationOverlay) motivationOverlay.addEventListener('click', closeModal);
+
+    // Close Class Notification Modal Logic
+    const closeClassNotifBtn = document.getElementById('closeClassNotificationBtn');
+    const classNotifOverlay = document.getElementById('classNotificationOverlay');
+    const classNotifModal = document.getElementById('classNotificationModal');
+
+    const closeClassModal = () => {
+        if (classNotifModal) {
+            classNotifModal.classList.remove('opacity-100', 'scale-100');
+            classNotifModal.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                classNotifModal.classList.add('hidden');
+            }, 500);
+        }
+    };
+
+    if (closeClassNotifBtn) closeClassNotifBtn.addEventListener('click', closeClassModal);
+    if (classNotifOverlay) classNotifOverlay.addEventListener('click', closeClassModal);
 });
+
+// Request notification permission early
+if ("Notification" in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+}
 
 window.nav = function (sectionId) {
     document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
@@ -165,7 +235,7 @@ function initPlan() {
         }
     }, (error) => {
         console.error("Error fetching study plan", error);
-        if(error.code === 'permission-denied') {
+        if (error.code === 'permission-denied') {
             alert("Firebase 'studyPlan' sync failed due to Security Rules. Please change Firestore Rules to allow read/write.");
         }
         // Offline fallback
@@ -195,7 +265,7 @@ function initPlan() {
     // Save plan
     savePlanBtn.addEventListener('click', () => {
         const newPlan = planInput.value.trim();
-        
+
         // Save to Firebase (this will trigger the onSnapshot above to update UI on all devices)
         db.collection("sharedData").doc("studyPlan").set({
             text: newPlan,
@@ -204,7 +274,7 @@ function initPlan() {
             console.error("Error saving plan:", err);
             planDisplay.textContent = newPlan || defaultPlanText;
         });
-        
+
         // Return to display mode
         planEditContainer.classList.add('hidden');
         planEditContainer.classList.remove('flex');
@@ -263,7 +333,7 @@ function initSubjects() {
         }
     }, err => {
         console.error("Offline or Error listening to lessons: ", err);
-        if(err.code === 'permission-denied') {
+        if (err.code === 'permission-denied') {
             alert("Firebase Security Rules error! Your database is locked. Other devices cannot see updates. Please change rules to 'allow read, write: if true;' in Firebase Console.");
         }
     });
@@ -386,7 +456,7 @@ function updateTimerDisplay() {
     } else {
         return;
     }
-    
+
     if (diff < 0) return;
     const h = Math.floor(diff / (1000 * 60 * 60)).toString().padStart(2, '0');
     const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
@@ -418,7 +488,7 @@ function initTimer() {
         }
         localStorage.setItem('timerStart', startTime.toString());
         timerInterval = setInterval(updateTimerDisplay, 1000);
-        
+
         btnStart.disabled = true; btnStart.classList.add('opacity-50');
         btnStart.textContent = "Start";
         if (btnPause) { btnPause.disabled = false; btnPause.classList.remove('opacity-50'); }
@@ -444,7 +514,7 @@ function initTimer() {
 
     btnEnd.addEventListener('click', async () => {
         clearInterval(timerInterval);
-        
+
         let elapsed = 0;
         if (localStorage.getItem('timerStart')) {
             elapsed = new Date().getTime() - parseInt(localStorage.getItem('timerStart'));
@@ -453,14 +523,14 @@ function initTimer() {
         }
 
         const duration = Math.max(1, Math.round(elapsed / 60000));
-        
+
         localStorage.removeItem('timerStart');
         localStorage.removeItem('timerElapsed');
-        
+
         btnStart.disabled = false; btnStart.classList.remove('opacity-50');
         btnStart.textContent = "Start";
         if (btnPause) { btnPause.disabled = true; btnPause.classList.add('opacity-50'); }
-        btnEnd.disabled = true; 
+        btnEnd.disabled = true;
         display.textContent = "00:00:00";
 
         const topic = prompt("Monawada me welawe padam kare? (What did you study?)");
@@ -545,4 +615,189 @@ function loadAnalysis() {
             }
         });
     });
+}
+
+function initClasses() {
+    const addClassBtn = document.getElementById('addClassBtn');
+    const addClassForm = document.getElementById('addClassForm');
+    const saveClassBtn = document.getElementById('saveClassBtn');
+    const classList = document.getElementById('classList');
+
+    // Toggle Add Class Form
+    if (addClassBtn) {
+        addClassBtn.addEventListener('click', () => {
+            if (addClassForm.classList.contains('hidden')) {
+                addClassForm.classList.remove('hidden');
+                addClassForm.classList.add('flex');
+                addClassBtn.innerHTML = '<i class="fas fa-times"></i>';
+            } else {
+                addClassForm.classList.add('hidden');
+                addClassForm.classList.remove('flex');
+                addClassBtn.innerHTML = '<i class="fas fa-plus"></i>';
+            }
+        });
+    }
+
+    // Save Class to Firestore
+    if (saveClassBtn) {
+        saveClassBtn.addEventListener('click', () => {
+            const name = document.getElementById('classNameInput').value.trim();
+            const date = document.getElementById('classDateInput').value;
+            const time = document.getElementById('classTimeInput').value;
+
+            if (!name || !date || !time) {
+                alert("Sudu, plz fill all fields (Name, Date, Time)!");
+                return;
+            }
+
+            db.collection("classSchedule").add({
+                name: name,
+                date: date,
+                time: time,
+                timestamp: new Date(`${date}T${time}`).getTime(),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                document.getElementById('classNameInput').value = '';
+                document.getElementById('classDateInput').value = '';
+                document.getElementById('classTimeInput').value = '';
+                addClassForm.classList.add('hidden');
+                addClassForm.classList.remove('flex');
+                addClassBtn.innerHTML = '<i class="fas fa-plus"></i>';
+            }).catch(err => console.error("Error adding class:", err));
+        });
+    }
+
+    // Real-time listener for Class Schedule
+    db.collection("classSchedule").orderBy("timestamp", "asc").onSnapshot(snapshot => {
+        let classesHtml = '';
+        let todayClassesHtml = '';
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        upcomingClassSchedules = []; // Reset global list
+
+        // Use local storage / session to show modal only once per session
+        const notifiedClasses = JSON.parse(sessionStorage.getItem('notifiedClasses') || '[]');
+        let newNotifsCount = 0;
+
+        if (snapshot.empty) {
+            if (classList) classList.innerHTML = '<p id="noClassesMsg" class="text-purple-400 text-sm text-center italic py-4">No upcoming classes scheduled yet.</p>';
+            return;
+        }
+
+        const now = new Date().getTime();
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            upcomingClassSchedules.push({ id: doc.id, ...data });
+
+            // Automatically skip classes that are completely passed by 3 hours
+            if (data.timestamp && data.timestamp < (now - 3 * 3600 * 1000)) {
+                // Delete past class to keep db clean (optional)
+                // db.collection("classSchedule").doc(doc.id).delete();
+                // However, we'll just not render it for now
+                return;
+            }
+
+            // Check if class is TODAY
+            if (data.date === todayStr) {
+                todayClassesHtml += `
+                    <div class="bg-amber-50 p-4 rounded-xl border border-amber-200 text-left shadow-sm">
+                        <p class="font-extrabold text-amber-900 text-lg">${data.name}</p>
+                        <p class="text-sm text-amber-700 mt-1 font-bold"><i class="far fa-clock"></i> ${data.time}</p>
+                    </div>
+                `;
+
+                if (!notifiedClasses.includes(doc.id)) {
+                    newNotifsCount++;
+                    notifiedClasses.push(doc.id);
+                }
+            }
+
+            // Format date for list view
+            let dateStrFormatted = '';
+            try {
+                const dateObj = new Date(data.date);
+                dateStrFormatted = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' });
+            } catch (e) {
+                dateStrFormatted = data.date;
+            }
+
+            classesHtml += `
+                <div class="flex justify-between items-center bg-purple-50/80 p-3 md:p-4 rounded-2xl border border-purple-100 group hover:shadow-md transition">
+                    <div class="flex flex-col">
+                        <span class="font-extrabold text-purple-900">${data.name}</span>
+                        <span class="text-xs md:text-sm text-purple-600 mt-1 font-semibold flex items-center gap-2">
+                            <span><i class="far fa-calendar-alt"></i> ${dateStrFormatted}</span>
+                            <span>| <i class="far fa-clock"></i> ${data.time}</span>
+                        </span>
+                    </div>
+                    <button onclick="deleteClass('${doc.id}')" class="text-rose-400 hover:text-white hover:bg-rose-500 transition-all p-2 w-9 h-9 flex items-center justify-center bg-white rounded-full shadow-sm active:scale-90">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+        });
+
+        if (classList) {
+            classList.innerHTML = classesHtml || '<p id="noClassesMsg" class="text-purple-400 text-sm text-center italic py-4">No upcoming classes scheduled yet.</p>';
+        }
+
+        // Trigger notifications if there are any classes today and we have new ones
+        if (todayClassesHtml && newNotifsCount > 0) {
+            sessionStorage.setItem('notifiedClasses', JSON.stringify(notifiedClasses));
+
+            window.showClassModal("Class Reminder ! 📚", todayClassesHtml);
+
+            // Trigger Phone/Browser Notification
+            window.sendPhoneNotification("Sudu, you have classes today! 📚", "Check your study tracker for class details.");
+        }
+
+        // Setup 30-minute advance notification interval if not already running
+        if (!classNotifInterval) {
+            classNotifInterval = setInterval(() => {
+                if (upcomingClassSchedules.length === 0) return;
+
+                const currentTime = new Date().getTime();
+                const notified30MinClasses = JSON.parse(localStorage.getItem('notified30MinClasses') || '[]');
+                let shouldUpdateStorage = false;
+
+                upcomingClassSchedules.forEach(cls => {
+                    if (!cls.timestamp) return;
+
+                    const diffMins = (cls.timestamp - currentTime) / 60000;
+
+                    // If class is exactly within 30 minutes away and not already notified
+                    if (diffMins > 0 && diffMins <= 30) {
+                        if (!notified30MinClasses.includes(cls.id)) {
+                            // Show In-app Modal
+                            const html = `
+                                <div class="bg-amber-50 p-4 rounded-xl border border-amber-200 text-left shadow-sm">
+                                    <p class="font-extrabold text-amber-900 text-lg">${cls.name}</p>
+                                    <p class="text-sm text-amber-700 mt-1 font-bold">Starts in ${Math.ceil(diffMins)} mins! <i class="far fa-clock"></i> ${cls.time}</p>
+                                </div>
+                            `;
+                            window.showClassModal("Manikee Thawa tiken Class Patan Gannooo! ⏳", html);
+
+                            // Native Push Notification
+                            window.sendPhoneNotification(`Up Next: ${cls.name} ⏳`, `Starts in ${Math.ceil(diffMins)} mins at ${cls.time}! Get ready!`);
+
+                            notified30MinClasses.push(cls.id);
+                            shouldUpdateStorage = true;
+                        }
+                    }
+                });
+
+                if (shouldUpdateStorage) {
+                    localStorage.setItem('notified30MinClasses', JSON.stringify(notified30MinClasses));
+                }
+            }, 30000); // Check every 30 seconds
+        }
+    }, err => console.log('Error fetching classes:', err));
+}
+
+// Global function to delete a scheduled class
+window.deleteClass = function (id) {
+    if (confirm("Sudu, are you sure you want to remove this class from the schedule?")) {
+        db.collection("classSchedule").doc(id).delete();
+    }
 }

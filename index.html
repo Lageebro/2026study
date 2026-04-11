@@ -69,6 +69,29 @@
         </div>
     </div>
 
+    <!-- Class Notification Modal -->
+    <div id="classNotificationModal"
+        class="hidden fixed inset-0 z-[60] flex items-center justify-center px-4 transition-all duration-500 opacity-0 scale-95">
+        <div class="absolute inset-0 bg-purple-900/60 backdrop-blur-sm" id="classNotificationOverlay"></div>
+        <div
+            class="relative bg-white rounded-[2rem] p-8 md:p-10 shadow-2xl max-w-sm md:max-w-md w-full text-center border-4 border-purple-100 transform transition-all">
+            <div
+                class="w-24 h-24 mx-auto bg-amber-50 rounded-full flex items-center justify-center mb-6 shadow-inner border border-amber-100">
+                <i class="fas fa-bell text-5xl text-amber-500 animate-bounce drop-shadow-md"></i>
+            </div>
+            <h2 id="classNotificationTitle" class="text-2xl font-extrabold text-purple-900 mb-4 tracking-tight">Class
+                Reminder ! 📚</h2>
+            <div id="classNotificationContent"
+                class="text-purple-700 text-[15px] md:text-base font-medium leading-relaxed mb-8 flex flex-col gap-3">
+                <!-- Classes for today -->
+            </div>
+            <button id="closeClassNotificationBtn"
+                class="bg-gradient-to-r from-amber-500 to-amber-600 text-white font-extrabold py-3.5 px-8 rounded-2xl shadow-xl shadow-amber-500/30 hover:scale-105 transition-transform active:scale-95 w-full text-lg">
+                Hari, Manike! ✅
+            </button>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <div id="appContent"
         class="hidden md:flex-1 w-full max-w-md md:max-w-none mx-auto p-4 md:p-10 transition-all pb-24 md:pb-10 md:overflow-y-auto">
@@ -114,6 +137,43 @@
                         <button id="savePlanBtn"
                             class="bg-purple-600 text-white rounded-2xl py-3 px-4 font-bold hover:bg-purple-700 transition w-full active:scale-95">Save
                             Plan</button>
+                    </div>
+                </div>
+
+                <!-- Class Schedule -->
+                <div
+                    class="bg-white rounded-3xl shadow-xl shadow-purple-200/50 p-6 border border-purple-100 relative group md:col-span-2 lg:col-span-3 mt-6 md:mt-0">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-purple-900">Class Schedule</h2>
+                        <button id="addClassBtn"
+                            class="text-purple-600 hover:text-purple-800 transition bg-purple-50 w-8 h-8 rounded-full flex items-center justify-center border border-purple-100">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+
+                    <!-- Add Class Form -->
+                    <div id="addClassForm"
+                        class="hidden flex-col gap-3 mb-4 bg-purple-50/50 p-4 rounded-2xl border border-purple-100 transition-all">
+                        <input type="text" id="classNameInput" placeholder="Class Name (e.g. BST,SFT,ICT)"
+                            class="w-full bg-white rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 border border-purple-100 text-purple-900 shadow-sm"
+                            required>
+                        <div class="flex gap-3">
+                            <input type="date" id="classDateInput"
+                                class="w-1/2 bg-white rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 border border-purple-100 text-purple-900 shadow-sm"
+                                required>
+                            <input type="time" id="classTimeInput"
+                                class="w-1/2 bg-white rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 border border-purple-100 text-purple-900 shadow-sm"
+                                required>
+                        </div>
+                        <button id="saveClassBtn"
+                            class="bg-purple-600 text-white rounded-xl py-3 px-4 font-bold hover:bg-purple-700 transition w-full active:scale-95 mt-1 shadow-md">Add
+                            to Schedule</button>
+                    </div>
+
+                    <!-- Scheduled Classes List -->
+                    <div id="classList" class="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                        <p id="noClassesMsg" class="text-purple-400 text-sm text-center italic py-4">No upcoming classes
+                            scheduled yet.</p>
                     </div>
                 </div>
             </div>
