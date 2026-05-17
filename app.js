@@ -75,6 +75,57 @@ window.showClassModal = function (title, contentHtml) {
     }
 }
 
+window.downloadICS = function(name, dateStr, timeStr) {
+    const startObj = new Date(`${dateStr}T${timeStr}`);
+    if (isNaN(startObj.getTime())) return;
+    
+    const endObj = new Date(startObj.getTime() + 2 * 60 * 60 * 1000); // 2 hours
+    
+    const formatDate = (date) => {
+        return date.toISOString().replace(/-|:|\.\d+/g, "");
+    };
+
+    const startICS = formatDate(startObj);
+    const endICS = formatDate(endObj);
+    const nowICS = formatDate(new Date());
+
+    const icsContent = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//StudyTracker//EN",
+        "CALSCALE:GREGORIAN",
+        "BEGIN:VEVENT",
+        `DTSTAMP:${nowICS}`,
+        `DTSTART:${startICS}`,
+        `DTEND:${endICS}`,
+        `SUMMARY:${name} Class`,
+        `DESCRIPTION:Reminder for ${name} class. Good luck Manike!`,
+        "BEGIN:VALARM",
+        "TRIGGER:-PT15M",
+        "ACTION:DISPLAY",
+        "DESCRIPTION:Reminder",
+        "END:VALARM",
+        "END:VEVENT",
+        "END:VCALENDAR"
+    ].join("\r\n");
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
+    if (isIos) {
+        window.location.href = url; // Natively opens Apple Calendar Add Event prompt
+    } else {
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${name.replace(/\s+/g, '_')}_Class.ics`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
     // Splash screen logic
     setTimeout(() => {
@@ -108,6 +159,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Run DB check/seeding in the background without blocking the UI
         initDB();
+
+        // Start checking the timetable schedule
+        initTimetableNotifications();
     }, 100);
 
     // Close Motivation Modal Logic
@@ -704,6 +758,7 @@ function initClasses() {
                 timestamp: new Date(`${date}T${time}`).getTime(),
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => {
+                window.downloadICS(name, date, time);
                 document.getElementById('classNameInput').value = '';
                 document.getElementById('classDateInput').value = '';
                 document.getElementById('classTimeInput').value = '';
@@ -847,4 +902,169 @@ window.deleteClass = function (id) {
     if (confirm("Sudu, are you sure you want to remove this class from the schedule?")) {
         db.collection("classSchedule").doc(id).delete();
     }
+}
+
+const colorTheme = {
+    rose: {
+        iconBg: 'bg-rose-50 border-rose-100',
+        iconText: 'text-rose-500',
+        btnBg: 'from-rose-500 to-rose-600 shadow-rose-500/30',
+        text: 'text-rose-700'
+    },
+    emerald: {
+        iconBg: 'bg-emerald-50 border-emerald-100',
+        iconText: 'text-emerald-500',
+        btnBg: 'from-emerald-500 to-emerald-600 shadow-emerald-500/30',
+        text: 'text-emerald-700'
+    },
+    sky: {
+        iconBg: 'bg-sky-50 border-sky-100',
+        iconText: 'text-sky-500',
+        btnBg: 'from-sky-500 to-sky-600 shadow-sky-500/30',
+        text: 'text-sky-700'
+    },
+    fuchsia: {
+        iconBg: 'bg-fuchsia-50 border-fuchsia-100',
+        iconText: 'text-fuchsia-500',
+        btnBg: 'from-fuchsia-500 to-fuchsia-600 shadow-fuchsia-500/30',
+        text: 'text-fuchsia-700'
+    },
+    amber: {
+        iconBg: 'bg-amber-50 border-amber-100',
+        iconText: 'text-amber-500',
+        btnBg: 'from-amber-500 to-amber-600 shadow-amber-500/30',
+        text: 'text-amber-700'
+    }
+};
+
+window.showColoredModal = function (taskName, title, body, color) {
+    const notifModal = document.getElementById('classNotificationModal');
+    const notifContent = document.getElementById('classNotificationContent');
+    const notifTitle = document.getElementById('classNotificationTitle');
+    const iconContainer = notifModal.querySelector('.rounded-full.flex.items-center.justify-center');
+    const icon = iconContainer.querySelector('i');
+    const btn = document.getElementById('closeClassNotificationBtn');
+
+    const theme = colorTheme[color] || colorTheme.amber;
+
+    if (notifModal && notifContent) {
+        if (title && notifTitle) notifTitle.textContent = title;
+        notifContent.innerHTML = `<div class="text-lg font-bold mt-2 ${theme.text}">${body}</div>`;
+        
+        iconContainer.className = `w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 shadow-inner border ${theme.iconBg}`;
+        icon.className = `fas fa-clock text-5xl animate-bounce drop-shadow-md ${theme.iconText}`;
+        
+        btn.className = `bg-gradient-to-r ${theme.btnBg} text-white font-extrabold py-3.5 px-8 rounded-2xl shadow-xl hover:scale-105 transition-transform active:scale-95 w-full text-lg`;
+        btn.textContent = color === 'fuchsia' ? "Break Eka Gamu! ☕" : "Hari, Patan Gamu! ✨";
+
+        notifModal.classList.remove('hidden');
+        setTimeout(() => {
+            notifModal.classList.remove('opacity-0', 'scale-95');
+            notifModal.classList.add('opacity-100', 'scale-100');
+        }, 100);
+    }
+}
+
+const weeklyTimetable = {
+    1: [ // Monday
+        { time: "08:00", name: "SFT Study", color: "rose", emoji: "🔴" },
+        { time: "09:00", name: "SFT Study", color: "rose", emoji: "🔴" },
+        { time: "10:00", name: "One Hour Break", color: "fuchsia", emoji: "🟣" },
+        { time: "11:00", name: "SFT Study Works", color: "rose", emoji: "🔴" },
+        { time: "15:00", name: "SFT Past Paper", color: "rose", emoji: "🔴" },
+        { time: "20:00", name: "1.1/2 Break", color: "fuchsia", emoji: "🟣" },
+        { time: "21:30", name: "Paper Correcting", color: "rose", emoji: "🔴" }
+    ],
+    2: [ // Tuesday
+        { time: "08:00", name: "BST Study", color: "emerald", emoji: "🟢" },
+        { time: "09:00", name: "SFT Study", color: "rose", emoji: "🔴" },
+        { time: "10:00", name: "One Hour Break", color: "fuchsia", emoji: "🟣" },
+        { time: "11:00", name: "BST Past Paper", color: "emerald", emoji: "🟢" },
+        { time: "16:00", name: "Paper Correcting", color: "emerald", emoji: "🟢" },
+        { time: "20:00", name: "2.1/2 Break", color: "fuchsia", emoji: "🟣" },
+        { time: "21:30", name: "ICT Study", color: "sky", emoji: "🔵" },
+        { time: "22:30", name: "ICT Study", color: "sky", emoji: "🔵" },
+        { time: "00:00", name: "ICT Study Work", color: "sky", emoji: "🔵" }
+    ],
+    3: [ // Wednesday
+        { time: "08:00", name: "SFT Study", color: "rose", emoji: "🔴" },
+        { time: "09:00", name: "SFT Study", color: "rose", emoji: "🔴" },
+        { time: "10:00", name: "One Hour Break", color: "fuchsia", emoji: "🟣" },
+        { time: "11:00", name: "SFT Study Works", color: "rose", emoji: "🔴" },
+        { time: "15:00", name: "SFT Study Works", color: "rose", emoji: "🔴" },
+        { time: "17:00", name: "2.1/2 Break", color: "fuchsia", emoji: "🟣" }, 
+        { time: "19:30", name: "BST Revision", color: "emerald", emoji: "🟢" },
+        { time: "23:00", name: "One Hour Break", color: "fuchsia", emoji: "🟣" },
+        { time: "00:00", name: "BST Study Work", color: "emerald", emoji: "🟢" }
+    ],
+    4: [ // Thursday
+        { time: "08:00", name: "ICT Study", color: "sky", emoji: "🔵" },
+        { time: "09:00", name: "One Hour Break", color: "fuchsia", emoji: "🟣" },
+        { time: "10:30", name: "ICT Past Paper", color: "sky", emoji: "🔵" },
+        { time: "15:00", name: "Paper Correcting", color: "sky", emoji: "🔵" },
+        { time: "18:30", name: "One Hour Break", color: "fuchsia", emoji: "🟣" },
+        { time: "19:30", name: "BST Revision", color: "emerald", emoji: "🟢" },
+        { time: "23:00", name: "One Hour Break", color: "fuchsia", emoji: "🟣" },
+        { time: "00:00", name: "ICT Study Work", color: "sky", emoji: "🔵" }
+    ],
+    5: [ // Friday
+        { time: "08:00", name: "ICT Paper Class", color: "sky", emoji: "🔵" },
+        { time: "17:00", name: "3 Hour Break", color: "fuchsia", emoji: "🟣" },
+        { time: "20:00", name: "BST Study", color: "emerald", emoji: "🟢" },
+        { time: "21:00", name: "BST Study", color: "emerald", emoji: "🟢" }
+    ],
+    6: [ // Saturday
+        { time: "07:00", name: "ICT Study", color: "sky", emoji: "🔵" },
+        { time: "08:00", name: "ICT Study", color: "sky", emoji: "🔵" },
+        { time: "09:00", name: "30Min Break", color: "fuchsia", emoji: "🟣" },
+        { time: "09:30", name: "ICT Study", color: "sky", emoji: "🔵" },
+        { time: "10:30", name: "ICT Study", color: "sky", emoji: "🔵" },
+        { time: "11:30", name: "2.1/2 Break", color: "fuchsia", emoji: "🟣" },
+        { time: "14:00", name: "BST Study", color: "emerald", emoji: "🟢" },
+        { time: "15:00", name: "BST Study", color: "emerald", emoji: "🟢" },
+        { time: "16:00", name: "30Min Break", color: "fuchsia", emoji: "🟣" },
+        { time: "16:30", name: "BST Study", color: "emerald", emoji: "🟢" },
+        { time: "17:30", name: "BST Study Work", color: "emerald", emoji: "🟢" },
+        { time: "19:30", name: "1.1/2 Break", color: "fuchsia", emoji: "🟣" },
+        { time: "21:00", name: "ICT Study Work", color: "sky", emoji: "🔵" }
+    ],
+    0: [ // Sunday
+        { time: "08:00", name: "SFT Study", color: "rose", emoji: "🔴" },
+        { time: "09:00", name: "SFT Study", color: "rose", emoji: "🔴" },
+        { time: "10:00", name: "30Min Break", color: "fuchsia", emoji: "🟣" },
+        { time: "10:30", name: "SFT Study", color: "rose", emoji: "🔴" },
+        { time: "11:30", name: "3.1/2 Break", color: "fuchsia", emoji: "🟣" },
+        { time: "15:00", name: "SFT Paper Class", color: "rose", emoji: "🔴" }
+    ]
+};
+
+function initTimetableNotifications() {
+    setInterval(() => {
+        const now = new Date();
+        const currentDay = now.getDay(); 
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const timeStr = `${hours}:${minutes}`;
+
+        const todaySchedule = weeklyTimetable[currentDay];
+        if (!todaySchedule) return;
+
+        const currentTask = todaySchedule.find(t => t.time === timeStr);
+        
+        if (currentTask) {
+            const notifKey = `timetable_${currentDay}_${timeStr}_${now.toDateString()}`;
+            if (localStorage.getItem(notifKey)) return;
+            localStorage.setItem(notifKey, 'true');
+
+            const isBreak = currentTask.color === 'fuchsia';
+            const title = isBreak ? `${currentTask.emoji} Break Time Sudu!` : `${currentTask.emoji} ${currentTask.name} Time Manike!`;
+            const body = isBreak ? `Dan oya ${currentTask.name} ekak ganna welaawa.` : `Dan oya ${currentTask.name} karanna welaawa. Patan gamu sudu! 🚀`;
+            
+            // Native Phone Push Notification
+            window.sendPhoneNotification(title, body);
+
+            // Colored In-App Modal
+            window.showColoredModal(currentTask.name, title, body, currentTask.color);
+        }
+    }, 45000); // Check every 45 seconds
 }
