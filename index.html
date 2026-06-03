@@ -120,6 +120,9 @@
                 <div class="bg-white rounded-3xl shadow-xl shadow-purple-200/50 p-6 border border-purple-100 relative group md:col-span-2 lg:col-span-3 mb-6 md:mb-0">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-bold text-purple-900">Weekly Timetable</h2>
+                        <button id="syncTimetableBtn" class="text-xs md:text-sm bg-purple-100 text-purple-700 hover:bg-purple-200 font-bold py-1.5 px-3 md:px-4 rounded-full flex items-center gap-2 transition active:scale-95 border border-purple-200 shadow-sm">
+                            <i class="fab fa-apple"></i> Sync to iPhone
+                        </button>
                     </div>
                     
                     <div class="overflow-x-auto pb-4 custom-scrollbar">
@@ -337,30 +340,62 @@
         <!-- Analyze Section -->
         <section id="sec-analyze" class="view-section hidden max-w-6xl mx-auto md:w-full">
             <h2 class="text-xl md:text-3xl font-bold mb-4 md:mb-8 md:mt-2">Analysis Overview</h2>
-            <div class="md:grid md:grid-cols-12 md:gap-6 md:items-start">
+            
+            <!-- Filters Bar -->
+            <div class="bg-white rounded-3xl p-5 shadow-lg border border-purple-100 mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto items-center">
+                    <div class="flex flex-col w-full sm:w-48">
+                        <label for="filterMonth" class="text-xs font-bold text-purple-600 mb-1 ml-1">Filter by Month</label>
+                        <select id="filterMonth" class="w-full bg-purple-50/80 text-purple-900 rounded-2xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 border border-purple-100 font-semibold cursor-pointer">
+                            <option value="all">All Months</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col w-full sm:w-48">
+                        <label for="filterDate" class="text-xs font-bold text-purple-600 mb-1 ml-1">Filter by Date</label>
+                        <input type="date" id="filterDate" class="w-full bg-purple-50/80 text-purple-900 rounded-2xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 border border-purple-100 font-semibold cursor-pointer text-purple-900">
+                    </div>
+                </div>
+                <button id="clearFiltersBtn" class="w-full sm:w-auto bg-purple-100 hover:bg-purple-200 text-purple-700 font-bold py-3 px-6 rounded-2xl transition active:scale-95 flex items-center justify-center gap-2 border border-purple-200 shadow-sm mt-3 sm:mt-0">
+                    <i class="fas fa-undo"></i> Reset Filters
+                </button>
+            </div>
+
+            <div class="md:grid md:grid-cols-12 md:gap-6 md:items-stretch">
                 <div class="md:col-span-5 flex flex-col gap-4 md:gap-6 mb-6 md:mb-0">
                     <div class="grid grid-cols-2 gap-4">
                         <div
-                            class="bg-white p-4 md:p-8 rounded-3xl shadow-lg border border-purple-100 text-center flex flex-col justify-center">
+                            class="bg-white p-4 md:p-8 rounded-3xl shadow-lg border border-purple-100 text-center flex flex-col justify-center min-h-[10rem]">
                             <p class="text-xs md:text-sm text-purple-600 font-bold uppercase mb-1">Total Hours</p>
                             <p id="statTotalHours" class="text-2xl md:text-4xl font-extrabold text-purple-900">0.0</p>
                         </div>
                         <div
-                            class="bg-white p-4 md:p-8 rounded-3xl shadow-lg border border-purple-100 text-center flex flex-col justify-center">
+                            class="bg-white p-4 md:p-8 rounded-3xl shadow-lg border border-purple-100 text-center flex flex-col justify-center min-h-[10rem]">
                             <p class="text-xs md:text-sm text-purple-600 font-bold uppercase mb-1">Lesson Progress</p>
                             <p id="statLessons" class="text-2xl md:text-4xl font-extrabold text-purple-900">0 / 0</p>
                         </div>
                     </div>
-                    <div class="bg-white rounded-3xl shadow-lg border border-purple-100 p-4 md:p-6 flex-1">
-                        <h3 class="text-sm md:text-lg font-bold text-purple-900 mb-3 ml-2">Recent Study Topics</h3>
-                        <ul id="recentTopicsList" class="space-y-2 md:space-y-3 text-sm md:text-base"></ul>
+                    <div class="bg-white rounded-3xl shadow-lg border border-purple-100 p-4 md:p-6 flex-1 flex flex-col min-h-[22rem]">
+                        <div class="flex justify-between items-center mb-3 ml-2 flex-wrap gap-2">
+                            <h3 class="text-sm md:text-lg font-bold text-purple-900">Study History</h3>
+                            <span id="sessionCountBadge" class="text-xs bg-purple-100 text-purple-700 font-bold px-2.5 py-1 rounded-full border border-purple-200">0 sessions</span>
+                        </div>
+                        <div class="overflow-y-auto max-h-[24rem] pr-2 custom-scrollbar" id="studyHistoryScroll">
+                            <ul id="recentTopicsList" class="space-y-3 text-sm md:text-base"></ul>
+                        </div>
                     </div>
                 </div>
 
                 <div
-                    class="bg-white p-4 md:p-8 rounded-3xl shadow-lg border border-purple-100 md:col-span-7 h-full flex flex-col justify-center">
-                    <h3 class="text-sm md:text-lg font-bold text-purple-900 mb-4 ml-2">Study Trend</h3>
-                    <canvas id="studyChart"></canvas>
+                    class="bg-white p-4 md:p-8 rounded-3xl shadow-lg border border-purple-100 md:col-span-7 flex flex-col justify-center min-h-[28rem]">
+                    <div class="flex justify-between items-center mb-4 ml-2 flex-wrap gap-2">
+                        <h3 class="text-sm md:text-lg font-bold text-purple-900">Study Trend</h3>
+                        <span class="text-[11px] text-purple-500 font-medium italic"><i class="fas fa-arrows-left-right"></i> Swipe/Scroll left-right</span>
+                    </div>
+                    <div class="overflow-x-auto w-full custom-scrollbar pb-2" id="chartScrollContainer">
+                        <div id="chartWrapper" class="min-w-full h-80">
+                            <canvas id="studyChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

@@ -29,6 +29,7 @@ const TARGET_DATE = new Date("2026-08-10T00:00:00").getTime();
 let studyChartInstance = null;
 let upcomingClassSchedules = [];
 let classNotifInterval = null;
+let allSessions = [];
 
 // Register Service Worker for Mobile Notifications
 if ('serviceWorker' in navigator) {
@@ -156,12 +157,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         initTimer();
         initClasses(); // Class schedule manager
         loadAnalysis(); // Preload analysis listeners
+        initFilters(); // Initialize study history filters
 
         // Run DB check/seeding in the background without blocking the UI
         initDB();
 
         // Start checking the timetable schedule
         initTimetableNotifications();
+
+        const syncBtn = document.getElementById('syncTimetableBtn');
+        if (syncBtn) {
+            syncBtn.addEventListener('click', window.syncTimetableToCalendar);
+        }
     }, 100);
 
     // Close Motivation Modal Logic
@@ -667,55 +674,259 @@ function loadAnalysis() {
 
     // Session log listener
     db.collection("studySessions").orderBy("timestamp", "desc").onSnapshot(snapshot => {
-        const sessions = [];
-        let totalMins = 0;
-        const dateMap = {};
-
+        allSessions = [];
         snapshot.forEach(doc => {
-            const data = doc.data();
-            sessions.push(data);
-            totalMins += data.durationInMinutes;
-            dateMap[data.date] = (dateMap[data.date] || 0) + data.durationInMinutes;
+            allSessions.push({ id: doc.id, ...doc.data() });
         });
 
-        document.getElementById('statTotalHours').textContent = (totalMins / 60).toFixed(1) + 'h';
+        // Populate months filter dropdown dynamically
+        populateMonthFilter();
 
-        const recentList = document.getElementById('recentTopicsList');
+        // Render data based on active filters
+        renderFilteredData();
+    });
+}
+
+function initFilters() {
+    const filterMonth = document.getElementById('filterMonth');
+    const filterDate = document.getElementById('filterDate');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+
+    if (filterMonth && filterDate && clearFiltersBtn) {
+        filterMonth.addEventListener('change', (e) => {
+            filterDate.value = ''; // clear specific date filter
+            renderFilteredData();
+        });
+
+        filterDate.addEventListener('input', (e) => {
+            if (e.target.value) {
+                filterMonth.value = 'all'; // reset month dropdown
+            }
+            renderFilteredData();
+        });
+
+        clearFiltersBtn.addEventListener('click', () => {
+            filterMonth.value = 'all';
+            filterDate.value = '';
+            renderFilteredData();
+        });
+    }
+}
+
+function populateMonthFilter() {
+    const filterMonth = document.getElementById('filterMonth');
+    if (!filterMonth) return;
+
+    const previousValue = filterMonth.value;
+
+    // Clear options but keep the first one ("All Months")
+    filterMonth.innerHTML = '<option value="all">All Months</option>';
+
+    const monthsSet = new Set();
+    allSessions.forEach(s => {
+        if (s.date) {
+            const parts = s.date.split('-');
+            if (parts.length >= 2) {
+                monthsSet.add(`${parts[0]}-${parts[1]}`); // "YYYY-MM"
+            }
+        }
+    });
+
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const sortedMonths = Array.from(monthsSet).sort().reverse(); // latest month first
+
+    sortedMonths.forEach(m => {
+        const [year, monthVal] = m.split('-');
+        const name = monthNames[parseInt(monthVal) - 1];
+        const option = document.createElement('option');
+        option.value = m;
+        option.textContent = `${name} ${year}`;
+        filterMonth.appendChild(option);
+    });
+
+    // Restore previous selection if it still exists
+    if (Array.from(filterMonth.options).some(opt => opt.value === previousValue)) {
+        filterMonth.value = previousValue;
+    } else {
+        filterMonth.value = 'all';
+    }
+}
+
+function renderFilteredData() {
+    const filterMonth = document.getElementById('filterMonth');
+    const filterDate = document.getElementById('filterDate');
+
+    const selectedMonth = filterMonth ? filterMonth.value : 'all';
+    const selectedDate = filterDate ? filterDate.value : '';
+
+    let filteredSessions = allSessions;
+    if (selectedMonth !== 'all') {
+        filteredSessions = allSessions.filter(s => s.date && s.date.startsWith(selectedMonth));
+    } else if (selectedDate) {
+        filteredSessions = allSessions.filter(s => s.date === selectedDate);
+    }
+
+    // Update Total Hours based on filtered sessions
+    let totalMins = 0;
+    filteredSessions.forEach(s => {
+        totalMins += s.durationInMinutes;
+    });
+    const totalHoursEl = document.getElementById('statTotalHours');
+    if (totalHoursEl) {
+        totalHoursEl.textContent = (totalMins / 60).toFixed(1) + 'h';
+    }
+
+    // Update Study History list
+    const recentList = document.getElementById('recentTopicsList');
+    if (recentList) {
         recentList.innerHTML = '';
-        const recentSessions = sessions.slice(0, 5); // display 5 most recent
-
-        if (recentSessions.length === 0) {
-            recentList.innerHTML = '<p class="text-purple-300 text-center text-xs py-2 italic font-medium">No recent sessions yet.</p>';
+        
+        if (filteredSessions.length === 0) {
+            recentList.innerHTML = '<p class="text-purple-300 text-center text-xs py-4 italic font-medium">No sessions matching search criteria.</p>';
         } else {
-            recentSessions.forEach(s => {
+            filteredSessions.forEach(s => {
+                let dateStrFormatted = s.date;
+                try {
+                    const dateObj = new Date(s.date);
+                    dateStrFormatted = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                } catch (e) {
+                    dateStrFormatted = s.date;
+                }
+
                 const li = document.createElement('li');
-                li.className = "flex justify-between items-center bg-purple-50 p-3 rounded-2xl border border-purple-100";
-                li.innerHTML = `<span class="font-semibold text-purple-900">${s.topic}</span> <span class="text-xs bg-purple-200 text-purple-800 px-2 py-1 rounded-full font-bold">${s.durationInMinutes} min</span>`;
+                li.className = "flex justify-between items-center bg-purple-50 p-3 rounded-2xl border border-purple-100 group hover:shadow-sm transition active:scale-[0.99] duration-200";
+                li.innerHTML = `
+                    <div class="flex flex-col gap-0.5 text-left">
+                        <span class="font-bold text-purple-900">${s.topic}</span>
+                        <span class="text-[11px] text-purple-500 font-semibold"><i class="far fa-calendar-alt mr-1"></i>${dateStrFormatted}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs bg-purple-200 text-purple-800 px-2.5 py-1 rounded-full font-extrabold shadow-sm">${s.durationInMinutes} min</span>
+                        <button onclick="deleteStudySession('${s.id}')" class="text-rose-400 hover:text-white hover:bg-rose-500 transition-all p-2 w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm md:opacity-0 md:group-hover:opacity-100 active:scale-90">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                        </button>
+                    </div>
+                `;
                 recentList.appendChild(li);
             });
         }
+    }
 
-        const ctx = document.getElementById('studyChart').getContext('2d');
-        const labels = Object.keys(dateMap).sort().slice(-7); // sort naturally by date string
-        const dataArr = labels.map(day => dateMap[day]);
+    // Update session count badge
+    const badge = document.getElementById('sessionCountBadge');
+    if (badge) {
+        badge.textContent = `${filteredSessions.length} session${filteredSessions.length === 1 ? '' : 's'}`;
+    }
 
-        if (studyChartInstance) studyChartInstance.destroy();
-        studyChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels.map(day => { let d = new Date(day); return `${d.getDate()}/${d.getMonth() + 1}`; }),
-                datasets: [{ data: dataArr, backgroundColor: '#a78bfa', borderRadius: 8 }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: { beginAtZero: true, grid: { display: false } },
-                    x: { grid: { display: false } }
-                },
-                plugins: { legend: { display: false } }
-            }
+    // Update Study Trend Chart
+    renderChart(filteredSessions, selectedMonth, selectedDate);
+}
+
+window.deleteStudySession = function(id) {
+    if (confirm("Sudu, are you sure you want to delete this study session log?")) {
+        db.collection("studySessions").doc(id).delete().catch(err => {
+            console.error("Error deleting session:", err);
+            alert("Delete failed. Check connection.");
         });
+    }
+}
+
+function renderChart(filteredSessions, selectedMonth, selectedDate) {
+    const ctx = document.getElementById('studyChart').getContext('2d');
+    if (!ctx) return;
+
+    let labels = [];
+    let dataArr = [];
+
+    // Construct a map of date -> duration for sessions matching the filter
+    const dateMap = {};
+    filteredSessions.forEach(s => {
+        if (s.date) {
+            dateMap[s.date] = (dateMap[s.date] || 0) + s.durationInMinutes;
+        }
     });
+
+    if (selectedMonth !== 'all') {
+        // Selected a specific month: show all days of that month (chronological)
+        const [year, monthVal] = selectedMonth.split('-').map(Number);
+        const daysInMonth = new Date(year, monthVal, 0).getDate();
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dayStr = `${year}-${String(monthVal).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            labels.push(`${d}/${monthVal}`);
+            dataArr.push(dateMap[dayStr] || 0);
+        }
+    } else if (selectedDate) {
+        // Selected a specific date: just show that date
+        const dObj = new Date(selectedDate);
+        labels.push(`${dObj.getDate()}/${dObj.getMonth() + 1}`);
+        dataArr.push(dateMap[selectedDate] || 0);
+    } else {
+        // All time: show all dates from all study sessions sorted chronologically
+        const uniqueDates = Object.keys(dateMap).sort();
+        labels = uniqueDates.map(day => {
+            const d = new Date(day);
+            return `${d.getDate()}/${d.getMonth() + 1}`;
+        });
+        dataArr = uniqueDates.map(day => dateMap[day]);
+    }
+
+    // Set dynamic width for horizontal scroll
+    const chartWrapper = document.getElementById('chartWrapper');
+    const chartScrollContainer = document.getElementById('chartScrollContainer');
+    if (chartWrapper && chartScrollContainer) {
+        const minWidthPerDay = 45; // px
+        const calculatedWidth = labels.length * minWidthPerDay;
+        const containerWidth = chartScrollContainer.clientWidth || 350;
+        chartWrapper.style.width = Math.max(containerWidth, calculatedWidth) + 'px';
+    }
+
+    if (studyChartInstance) studyChartInstance.destroy();
+    
+    studyChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: dataArr,
+                backgroundColor: '#a78bfa',
+                borderRadius: 8,
+                hoverBackgroundColor: '#8b5cf6'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    grid: { display: true, color: '#f3e8ff' },
+                    ticks: {
+                        callback: function(value) {
+                            return value + 'm';
+                        }
+                    }
+                },
+                x: { grid: { display: false } }
+            },
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Duration: ${context.parsed.y} mins`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Auto-scroll to end (most recent day)
+    setTimeout(() => {
+        if (chartScrollContainer) {
+            chartScrollContainer.scrollLeft = chartScrollContainer.scrollWidth;
+        }
+    }, 100);
 }
 
 function initClasses() {
@@ -1068,3 +1279,90 @@ function initTimetableNotifications() {
         }
     }, 45000); // Check every 45 seconds
 }
+
+window.syncTimetableToCalendar = function() {
+    let icsEvents = [];
+    const now = new Date();
+    
+    const formatDate = (date) => {
+        return date.toISOString().replace(/-|:|\.\d+/g, "");
+    };
+
+    const nowICS = formatDate(now);
+
+    const getNextDayOfWeek = (dayOfWeek, timeStr) => {
+        const [hours, mins] = timeStr.split(':');
+        const resultDate = new Date(now.getTime());
+        resultDate.setHours(parseInt(hours), parseInt(mins), 0, 0);
+        
+        let daysToAdd = (dayOfWeek - resultDate.getDay() + 7) % 7;
+        
+        if (daysToAdd === 0 && resultDate < now) {
+            daysToAdd = 7;
+        }
+        
+        resultDate.setDate(resultDate.getDate() + daysToAdd);
+        return resultDate;
+    };
+
+    for (const [day, tasks] of Object.entries(weeklyTimetable)) {
+        const dayOfWeek = parseInt(day); 
+        const byDayMap = { 0: 'SU', 1: 'MO', 2: 'TU', 3: 'WE', 4: 'TH', 5: 'FR', 6: 'SA' };
+        const icsDay = byDayMap[dayOfWeek];
+
+        tasks.forEach((task) => {
+            if (task.color === 'fuchsia') return; // Skip breaks for calendar to avoid clutter
+            
+            const startDate = getNextDayOfWeek(dayOfWeek, task.time);
+            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hour block
+            
+            const startICS = formatDate(startDate);
+            const endICS = formatDate(endDate);
+            const uid = `timetable_${dayOfWeek}_${task.time.replace(':','')}@studytracker`;
+
+            const event = [
+                "BEGIN:VEVENT",
+                `UID:${uid}`,
+                `DTSTAMP:${nowICS}`,
+                `DTSTART:${startICS}`,
+                `DTEND:${endICS}`,
+                `RRULE:FREQ=WEEKLY;BYDAY=${icsDay}`,
+                `SUMMARY:${task.emoji} ${task.name}`,
+                `DESCRIPTION:Timetable Reminder. Patan gamu sudu! 🚀`,
+                "BEGIN:VALARM",
+                "TRIGGER:-PT0M",
+                "ACTION:DISPLAY",
+                "DESCRIPTION:Reminder",
+                "END:VALARM",
+                "END:VEVENT"
+            ].join("\r\n");
+
+            icsEvents.push(event);
+        });
+    }
+
+    const icsContent = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//StudyTracker//EN",
+        "CALSCALE:GREGORIAN",
+        ...icsEvents,
+        "END:VCALENDAR"
+    ].join("\r\n");
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
+    if (isIos) {
+        window.location.href = url; // Natively opens Apple Calendar
+    } else {
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `Weekly_Timetable.ics`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+};
