@@ -364,35 +364,35 @@
                 <div class="md:col-span-5 flex flex-col gap-4 md:gap-6 mb-6 md:mb-0">
                     <div class="grid grid-cols-2 gap-4">
                         <div
-                            class="bg-white p-4 md:p-8 rounded-3xl shadow-lg border border-purple-100 text-center flex flex-col justify-center min-h-[10rem]">
+                            class="bg-white p-4 md:p-5 rounded-3xl shadow-lg border border-purple-100 text-center flex flex-col justify-center min-h-[7.5rem]">
                             <p class="text-xs md:text-sm text-purple-600 font-bold uppercase mb-1">Total Hours</p>
-                            <p id="statTotalHours" class="text-2xl md:text-4xl font-extrabold text-purple-900">0.0</p>
+                            <p id="statTotalHours" class="text-2xl md:text-3xl font-extrabold text-purple-900">0.0</p>
                         </div>
                         <div
-                            class="bg-white p-4 md:p-8 rounded-3xl shadow-lg border border-purple-100 text-center flex flex-col justify-center min-h-[10rem]">
+                            class="bg-white p-4 md:p-5 rounded-3xl shadow-lg border border-purple-100 text-center flex flex-col justify-center min-h-[7.5rem]">
                             <p class="text-xs md:text-sm text-purple-600 font-bold uppercase mb-1">Lesson Progress</p>
-                            <p id="statLessons" class="text-2xl md:text-4xl font-extrabold text-purple-900">0 / 0</p>
+                            <p id="statLessons" class="text-2xl md:text-3xl font-extrabold text-purple-900">0 / 0</p>
                         </div>
                     </div>
-                    <div class="bg-white rounded-3xl shadow-lg border border-purple-100 p-4 md:p-6 flex-1 flex flex-col min-h-[22rem]">
+                    <div class="bg-white rounded-3xl shadow-lg border border-purple-100 p-4 md:p-5 flex-1 flex flex-col min-h-[16rem]">
                         <div class="flex justify-between items-center mb-3 ml-2 flex-wrap gap-2">
-                            <h3 class="text-sm md:text-lg font-bold text-purple-900">Study History</h3>
+                            <h3 class="text-sm md:text-base font-bold text-purple-900">Study History</h3>
                             <span id="sessionCountBadge" class="text-xs bg-purple-100 text-purple-700 font-bold px-2.5 py-1 rounded-full border border-purple-200">0 sessions</span>
                         </div>
-                        <div class="overflow-y-auto max-h-[24rem] pr-2 custom-scrollbar" id="studyHistoryScroll">
+                        <div class="overflow-y-auto max-h-[16rem] pr-2 custom-scrollbar" id="studyHistoryScroll">
                             <ul id="recentTopicsList" class="space-y-3 text-sm md:text-base"></ul>
                         </div>
                     </div>
                 </div>
 
                 <div
-                    class="bg-white p-4 md:p-8 rounded-3xl shadow-lg border border-purple-100 md:col-span-7 flex flex-col justify-center min-h-[28rem]">
+                    class="bg-white p-4 md:p-6 rounded-3xl shadow-lg border border-purple-100 md:col-span-7 flex flex-col justify-center min-h-[20rem]">
                     <div class="flex justify-between items-center mb-4 ml-2 flex-wrap gap-2">
-                        <h3 class="text-sm md:text-lg font-bold text-purple-900">Study Trend</h3>
+                        <h3 class="text-sm md:text-base font-bold text-purple-900">Study Trend</h3>
                         <span class="text-[11px] text-purple-500 font-medium italic"><i class="fas fa-arrows-left-right"></i> Swipe/Scroll left-right</span>
                     </div>
                     <div class="overflow-x-auto w-full custom-scrollbar pb-2" id="chartScrollContainer">
-                        <div id="chartWrapper" class="min-w-full h-80">
+                        <div id="chartWrapper" class="min-w-full h-56">
                             <canvas id="studyChart"></canvas>
                         </div>
                     </div>
